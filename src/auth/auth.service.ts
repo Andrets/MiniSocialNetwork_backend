@@ -63,6 +63,14 @@ export class AuthService {
         return this.generateTokens(user, agent)    
     }
 
+    async deleteRefreshToken(refreshToken: string) {
+        return await this.prisma.token.delete({
+            where: {
+                token: refreshToken
+            }
+        })
+    }
+
     private async generateTokens(user: User, agent: string): Promise<Tokens> {
         const accessToken = 'Bearer ' + this.jwtService.sign({
             id: user.id,
