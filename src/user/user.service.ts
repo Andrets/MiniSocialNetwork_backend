@@ -1,28 +1,43 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { EmailorID, UserDto } from './dto';
 import { User } from '@prisma/client';
+import { genSaltSync, hash, hashSync } from 'bcrypt';
 
 @Injectable()
 export class UserService {
+    private readonly logger = new Logger(UserService.name)
     constructor(
         private readonly prisma: PrismaService,
     ){}
 
     async create(user: UserDto): Promise<User> {
-        return this.prisma.user.create({
-            data: {
-                nickname: user.nickname,
-                password: user.password,
-                email: user.email,
-            }
-        })
+        const hashpassword = await this.hashPassword(user.password)
+        try {
+            return this.prisma.user.create({
+                data: {
+                    nickname: user.nickname,
+                    password: hashpassword,
+                    email: user.email,
+                }
+            })
+        } catch(err) {
+            this.logger.error(err);
+            return null
+        }
     }
 
-    async getOne(id: number): Promise<User> {
-        return await this.prisma.user.findUnique({
+    async getOne(idOrEmail: string) {
+        return await this.prisma.user.findFirst({
             where: {
-                id
+                OR: [
+                    {
+                        id: idOrEmail
+                    },
+                    {
+                        email: idOrEmail
+                    }
+                ]
             }
         })
     }
@@ -31,11 +46,15 @@ export class UserService {
         return await this.prisma.user.findMany()
     }
 
-    async delete(id: number): Promise<User> {
+    async delete(id: string) {
         return await this.prisma.user.delete({
             where: {
                 id
             }
         })
+    }
+
+    private async hashPassword(password: string): Promise<string> {
+        return hashSync(password, genSaltSync(10))
     }
 }
