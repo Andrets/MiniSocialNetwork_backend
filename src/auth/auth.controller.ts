@@ -3,14 +3,17 @@ import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto';
 import { Tokens } from './interfaces';
 import { Request, Response } from 'express';
-import { Cookie } from '@app/lib/decorators';
+import { Cookie, Public } from '@app/lib/decorators';
 
+
+
+@Public()
 @Controller('auth')
 export class AuthController {
     constructor(
         private readonly authService: AuthService,
     ){}
-
+    
     @Post('register')
     async register(@Body() dto: RegisterDto) {
         const user = await this.authService.register(dto)
