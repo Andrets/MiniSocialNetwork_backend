@@ -1,30 +1,30 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, ValidationPipe } from '@nestjs/common';
+import { Controller, Delete, Get, Param, ParseUUIDPipe, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
-import { EmailorID, UserDto } from './dto';
+import { CurrentUser } from '@app/lib/decorators';
+import { JwtPayload } from 'src/auth/interfaces';
+import { UserResponse } from './responses';
 
 @Controller('user')
 export class UserController {
     constructor(private readonly userService: UserService){}
-
-    @Post()
-    async create(@Body(new ValidationPipe()) user: UserDto): Promise<User> {
-        return await this.userService.create(user)
-    }
-     
+    
+    @UseInterceptors(ClassSerializerInterceptor)
     @Get(':idOrEmail')
     async getOne(@Param('idOrEmail') idOrEmail: string) {
-        return await this.userService.getOne(idOrEmail)
-    }
-    
-    @Get('get')
-    async getAll(): Promise<User[]> {
-        return await this.userService.getAll()
+        const user = await this.userService.getOne(idOrEmail)
+        return new UserResponse(user)
     }
 
     @Delete(':id')
-    async delete(@Param('id', ParseIntPipe) id: string) {
-        return await this.userService.delete(id)
+    async delete(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+        return await this.userService.delete(id, user)
+    }
+    
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Get('get')
+    async getAll(): Promise<User[]> {
+        return await this.userService.getAll()
     }
 
 }

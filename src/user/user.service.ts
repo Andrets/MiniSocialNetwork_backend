@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { EmailorID, UserDto } from './dto';
 import { User } from '@prisma/client';
 import { genSaltSync, hash, hashSync } from 'bcrypt';
+import { JwtPayload } from 'src/auth/interfaces';
+import { RegisterDto } from 'src/auth/dto';
 
 @Injectable()
 export class UserService {
@@ -11,7 +12,7 @@ export class UserService {
         private readonly prisma: PrismaService,
     ){}
 
-    async create(user: UserDto): Promise<User> {
+    async create(user: RegisterDto): Promise<User> {
         const hashpassword = await this.hashPassword(user.password)
         try {
             return this.prisma.user.create({
@@ -44,12 +45,19 @@ export class UserService {
 
     async getAll(): Promise<User[]> {
         return await this.prisma.user.findMany()
-    }
+    }   
 
-    async delete(id: string) {
-        return await this.prisma.user.delete({
+    async delete(id: string, user: JwtPayload) {
+        console.log(user)
+        if (user.id !== id) {
+            throw new ForbiddenException()
+        }
+        return this.prisma.user.delete({
             where: {
                 id
+            },
+            select: {
+                id: true
             }
         })
     }
