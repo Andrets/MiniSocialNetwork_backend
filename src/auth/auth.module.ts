@@ -9,9 +9,10 @@ import { PassportModule } from '@nestjs/passport';
 import { options } from './config';
 import { STRATEGIES } from './strategies';
 import { GUARDS } from './guards';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
-  imports: [UserModule, JwtModule.registerAsync(options()), PassportModule],
+  imports: [UserModule, JwtModule.registerAsync(options()), PassportModule, CacheModule.register()],
   providers: [AuthService, UserService, PrismaService, ...STRATEGIES, ...GUARDS],
   controllers: [AuthController]
 })

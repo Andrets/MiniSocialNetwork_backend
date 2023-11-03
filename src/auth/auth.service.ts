@@ -33,7 +33,7 @@ export class AuthService {
     }
 
     async login(dto: LoginDto, agent: string): Promise<Tokens> {
-        const user = await this.userService.getOne(dto.email).catch((err) => {
+        const user = await this.userService.getOne(dto.email, true).catch((err) => {
             this.logger.error(err)
         })
         if (!user || !compareSync(dto.password, user.password)) {

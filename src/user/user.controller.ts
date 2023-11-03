@@ -5,6 +5,7 @@ import { CurrentUser } from '@app/lib/decorators';
 import { JwtPayload } from 'src/auth/interfaces';
 import { UserResponse } from './responses';
 
+
 @Controller('user')
 export class UserController {
     constructor(private readonly userService: UserService){}
