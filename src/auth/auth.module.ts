@@ -1,19 +1,30 @@
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
-import { UserService } from 'src/user/user.service';
-import { PrismaService } from 'src/prisma.service';
-import { UserModule } from 'src/user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { PrismaService } from 'src/prisma.service';
+import { UserModule } from 'src/user/user.module';
+import { UserService } from 'src/user/user.service';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 import { options } from './config';
-import { STRATEGIES } from './strategies';
 import { GUARDS } from './guards';
-import { CacheModule } from '@nestjs/cache-manager';
+import { STRATEGIES } from './strategies';
 
 @Module({
-  imports: [UserModule, JwtModule.registerAsync(options()), PassportModule, CacheModule.register()],
-  providers: [AuthService, UserService, PrismaService, ...STRATEGIES, ...GUARDS],
-  controllers: [AuthController]
+  imports: [
+    UserModule,
+    JwtModule.registerAsync(options()),
+    PassportModule,
+    CacheModule.register(),
+  ],
+  providers: [
+    AuthService,
+    UserService,
+    PrismaService,
+    ...STRATEGIES,
+    ...GUARDS,
+  ],
+  controllers: [AuthController],
 })
 export class AuthModule {}
