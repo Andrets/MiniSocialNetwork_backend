@@ -7,9 +7,10 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { UserModule } from './user/user.module';
 import { FilesModule } from './files/files.module';
+import { GoogleModule } from './google/google.module';
 
 @Module({
-  imports: [UserModule, ConfigModule.forRoot({ isGlobal: true }), AuthModule, FilesModule],
+  imports: [UserModule, ConfigModule.forRoot({ isGlobal: true }), AuthModule, FilesModule, GoogleModule],
   controllers: [AppController],
   providers: [
     AppService,
