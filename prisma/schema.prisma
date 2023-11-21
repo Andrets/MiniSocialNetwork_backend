@@ -18,6 +18,8 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   Token     Token[]
+  Chat      Chat?    @relation(fields: [chatId], references: [chat_id])
+  chatId    String?
 
   @@map("users")
 }
@@ -30,4 +32,11 @@ model Token {
   userAgent String   @map("user_agent")
 
   @@map("tokens")
+}
+
+model Chat {
+  chat_id String @unique @default(uuid())
+  users   User[]
+
+  @@map("chats")
 }

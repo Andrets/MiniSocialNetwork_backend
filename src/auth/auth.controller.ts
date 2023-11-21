@@ -48,7 +48,17 @@ export class AuthController {
         `Error while entering with ${JSON.stringify(dto)}`,
       );
     }
-    this.setRefreshTokenToCookies(tokens, res);
+    res.cookie('refresh_token', tokens.refreshToken.token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      expires: new Date(tokens.refreshToken.exp),
+      secure: true,
+      path: '/',
+    });
+    res.status(HttpStatus.CREATED).json({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken.token,
+    });
   }
 
   @Get('logout')
@@ -92,7 +102,7 @@ export class AuthController {
     }
     res.cookie('refresh_token', tokens.refreshToken.token, {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: 'strict',
       expires: new Date(tokens.refreshToken.exp),
       secure: false,
       path: '/',

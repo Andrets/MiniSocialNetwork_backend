@@ -8,7 +8,7 @@ import {
   ParseUUIDPipe,
   UseInterceptors,
 } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Chat, User } from '@prisma/client';
 import { JwtPayload } from 'src/auth/interfaces';
 import { UserResponse } from './responses';
 import { UserService } from './user.service';
@@ -35,5 +35,15 @@ export class UserController {
   @Get()
   async getAll(): Promise<User[]> {
     return await this.userService.getAll();
+  }
+
+  @Get('room/:roomid')
+  async getOneRoom(@Param('roomid') roomid: string): Promise<Chat> {
+    return await this.userService.getOneRoom(roomid);
+  }
+
+  @Get('rooms')
+  async getAllRooms(): Promise<Chat[]> {
+    return await this.userService.getAllRooms();
   }
 }

@@ -1,8 +1,14 @@
 import { convertToSecondsUtil } from '@app/lib/utils';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { ForbiddenException, Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { User } from '@prisma/client';
+import { Chat, User } from '@prisma/client';
 import { genSaltSync, hashSync } from 'bcrypt';
 import { Cache } from 'cache-manager';
 import { RegisterDto } from 'src/auth/dto';
@@ -14,7 +20,7 @@ export class UserService {
   private readonly logger = new Logger(UserService.name);
   constructor(
     private readonly prisma: PrismaService,
-    @Inject(CACHE_MANAGER) private cachgeManager: Cache,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly configService: ConfigService,
   ) {}
 
@@ -36,9 +42,9 @@ export class UserService {
 
   async getOne(idOrEmail: string, isReset = false) {
     if (isReset) {
-      await this.cachgeManager.del(idOrEmail);
+      await this.cacheManager.del(idOrEmail);
     }
-    const user = await this.cachgeManager.get<User>(idOrEmail);
+    const user = await this.cacheManager.get<User>(idOrEmail);
     if (!user) {
       const user = await this.prisma.user.findFirst({
         where: {
@@ -55,7 +61,7 @@ export class UserService {
       if (!user) {
         return null;
       }
-      await this.cachgeManager.set(
+      await this.cacheManager.set(
         idOrEmail,
         user,
         convertToSecondsUtil(this.configService.get('JWT_EXP')),
@@ -74,8 +80,8 @@ export class UserService {
       throw new ForbiddenException();
     }
     await Promise.all([
-      this.cachgeManager.del(id),
-      this.cachgeManager.del(user.email),
+      this.cacheManager.del(id),
+      this.cacheManager.del(user.email),
     ]);
     return this.prisma.user.delete({
       where: {
@@ -85,6 +91,31 @@ export class UserService {
         id: true,
       },
     });
+  }
+
+  async getOneRoom(roomid: string) {
+    const room = await this.cacheManager.get<Chat>(roomid);
+    if (!room) {
+      const room = await this.prisma.chat.findFirst({
+        where: {
+          chat_id: roomid,
+        },
+      });
+      if (!room) {
+        throw new NotFoundException();
+      }
+      await this.cacheManager.set(
+        roomid,
+        room,
+        convertToSecondsUtil(this.configService.get('JWT_EXP')),
+      );
+      return room;
+    }
+    return room;
+  }
+
+  async getAllRooms(): Promise<Chat[]> {
+    return await this.prisma.chat.findMany();
   }
 
   private async hashPassword(password: string): Promise<string> {
