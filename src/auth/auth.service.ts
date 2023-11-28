@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Token, User } from '@prisma/client';
-import { compareSync } from 'bcrypt';
+import {compareSync} from 'bcrypt';
 import { add } from 'date-fns';
 import { PrismaService } from 'src/prisma.service';
 import { UserService } from 'src/user/user.service';
@@ -68,7 +68,7 @@ export class AuthService {
   }
 
   async deleteRefreshToken(refreshToken: string) {
-    return await this.prisma.token.delete({
+    return this.prisma.token.delete({
       where: {
         token: refreshToken,
       },
@@ -82,11 +82,11 @@ export class AuthService {
         id: user.id,
         email: user.email,
       });
-    const refreshToken = await this.generateRefreshToken(user.id, agent);
+    const refreshToken = await this.generateRefreshToken(user.id, agent)
     return {
       accessToken,
-      refreshToken,
-    };
+      refreshToken
+    }
   }
 
   private async generateRefreshToken(
