@@ -48,17 +48,18 @@ export class AuthController {
         `Error while entering with ${JSON.stringify(dto)}`,
       );
     }
-    res.cookie('refresh_token', tokens.refreshToken.token, {
-      httpOnly: true,
-      sameSite: 'lax',
-      expires: new Date(tokens.refreshToken.exp),
-      secure: true,
-      path: '/',
-    });
-    res.status(HttpStatus.CREATED).json({
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken.token,
-    });
+    try {
+      res.cookie('refresh_token', tokens.refreshToken.token, {
+        httpOnly: true,
+        sameSite: 'none',
+        expires: new Date(tokens.refreshToken.exp),
+        secure: true,
+        path: '/',
+      });
+    } catch(err) {
+      console.error(err)
+    }
+    res.status(HttpStatus.CREATED).json({ accessToken: tokens.accessToken })
   }
 
   @Get('logout')
@@ -74,6 +75,8 @@ export class AuthController {
     res.cookie('refresh_token', '', {
       httpOnly: true,
       secure: true,
+      sameSite: 'none',
+      path: '/',
       expires: new Date(),
     });
     res.sendStatus(HttpStatus.OK);
@@ -93,7 +96,7 @@ export class AuthController {
     if (!tokens) {
       throw new UnauthorizedException();
     }
-    this.setRefreshTokenToCookies(tokens, res);
+    await this.setRefreshTokenToCookies(tokens, res);
   }
 
   private async setRefreshTokenToCookies(tokens: Tokens, res: Response) {
@@ -102,11 +105,18 @@ export class AuthController {
     }
     res.cookie('refresh_token', tokens.refreshToken.token, {
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       expires: new Date(tokens.refreshToken.exp),
       secure: false,
       path: '/',
     });
     res.status(HttpStatus.CREATED).json({ accessToken: tokens.accessToken });
   }
+
+  // private async encryptAccessToken(accessToken: string) {
+  //   return hashSync(accessToken, genSaltSync(10))
+  // }
+  // private async encryptRefreshToken(refreshToken: string) {
+  //   return hashSync(refreshToken, genSaltSync(10))
+  // }
 }
